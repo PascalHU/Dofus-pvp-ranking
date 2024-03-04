@@ -3,10 +3,11 @@ const express = require("express");
 const formidable = require("express-formidable");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const app = express()
-const { Client } =  require("discord.js");
+const app = express();
+const { Client, EmbedBuilder } =  require("discord.js");
 const PREFIX = "!!"; // Prefix d'une commande
-const leaderboard = require("../Leaderboard");
+const Ladderboard = require("./Ladder");
+const { skip } = require('node:test');
 
 app.use(formidable());
 app.use(cors());
@@ -27,34 +28,78 @@ client.on("ready",() => {
     console.log(`Connecté comme ${client.user.tag}`);
 })
 
+/*
+    id Saylma : 1109761062447890452
+    id Sky : 186483704325996544
+
+    screen perco id : 1203867919457722388
+    test id : 1213935302381408288
+*/
+
 // Command Part 
 client.on("messageCreate", async message => {
-    if(message.member.id === "186483704325996544" && message.content.startsWith(PREFIX)){
-        const input = message.content.slice(PREFIX.length).trim()
-        console.log(input)
-        if(input.toLowerCase() === "reset"){
-            message.reply("Reset")
+    if(message.channelId === '1203867919457722388' || message.channelId === "1213935302381408288"){
+        if(message.member.id === "186483704325996544" || message.member.id === "1109761062447890452" && message.content.startsWith(PREFIX)){
+            const input = message.content.slice(PREFIX.length).trim().toLowerCase()
+            if(input === "reset"){
+                await Ladderboard.deleteMany()
+                message.reply("Remis à 0")
+            }
         }
-    }
-    if(message.member.id !== client.user.id && message.content.startsWith(PREFIX)){
-        const input = message.content.slice(PREFIX.length)
-        console.log(message.content)
+        if(message.member.id !== client.user.id && message.content.startsWith(PREFIX))
+        {
+            const input = message.content.slice(PREFIX.length).trim().toLowerCase()
+            if(input === "rank"){
+                try{
+                    const result = await Ladderboard.find({},["pseudo","score"],{sort:{ score: -1 }})
+                    let rank = "" 
+                    let pseudo = ""
+                    let score = ""
+                    for(let i = 0; i < result.length; i++){
+                        rank = rank.concat(i+1).concat("\n")
+                        pseudo = pseudo.concat(result[i].pseudo).concat("\n")
+                        score = score.concat(result[i].score).concat("\n")
+                    }
+                    const exampleEmbed = new EmbedBuilder()
+                    .setColor(0x0099FF)
+                    .setTitle('OPBAR Ranking')
+                    .setAuthor({ name: " "})
+                    .addFields(
+                        { name: 'Rank', value: rank, inline: true },
+                        { name: 'Pseudo', value: pseudo, inline: true },
+                        { name: 'Score', value: score, inline: true }
+                    )
+                    .setTimestamp()
+                    .setFooter({ text: "Saylma j'attend mon enclos è_é - Skyno"});
+                
+                    message.reply({ embeds: [exampleEmbed] });
+                } catch(error){
+                    message.reply("Pas de classement en cours")
+                }
+            }
+        }
     }
 })
 
 // Approval part
 client.on('messageReactionAdd', async (reaction, user) => {
-    if (reaction.emoji.name === "✅" && user.id === '186483704325996544') {
-        const key = reaction.message.content.trim().split(",")
-        for(let i = 0; i < key; i++){
-            const user_score = await leaderboard.findOne({pseudo: key[i].toLowerCase()})
-            if(!user_score){
-                const newUser = new data({
-                    pseudo: key[i].toLowerCase(),
-                    score: 1
-                })
-                await newUser.save()
-            }
+    if (reaction.message.channelId === "1203867919457722388" || reaction.message.channelId ==="1213935302381408288"){
+        if (reaction.emoji.name === "✅" && user.id === '186483704325996544' || user.id === "1109761062447890452") {
+            const key = reaction.message.content.trim().split(",")
+            for(let i = 0; i < key.length; i++){
+                const user_score = await Ladderboard.findOne({pseudo: key[i].toLowerCase().trim()})
+                if(!user_score){
+                    const newUser = new Ladderboard({
+                        pseudo: key[i].toLowerCase().trim(),
+                        score: 1
+                    })
+                    await newUser.save() 
+                }
+                if(user_score){
+                    const newScore ={ score: user_score.score + 1}
+                    await user_score.updateOne(newScore)
+                }
+        }
         }
     }
 });
