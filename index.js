@@ -57,12 +57,12 @@ client.on("messageCreate", async message => {
                     let score = ""
                     for(let i = 0; i < result.length; i++){
                         rank = rank.concat(i+1).concat("\n")
-                        pseudo = pseudo.concat(result[i].pseudo).concat("\n")
+                        pseudo = pseudo.concat(result[i].pseudo[0].toUpperCase() + result[i].pseudo.slice(1)).concat("\n")
                         score = score.concat(result[i].score).concat("\n")
                     }
                     const exampleEmbed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle('OPBAR Ranking')
+                    .setTitle('OPBAR PVP Ranking')
                     .setAuthor({ name: " "})
                     .addFields(
                         { name: 'Rank', value: rank, inline: true },
@@ -70,7 +70,7 @@ client.on("messageCreate", async message => {
                         { name: 'Score', value: score, inline: true }
                     )
                     .setTimestamp()
-                    .setFooter({ text: "Saylma j'attend mon enclos è_é - Skyno"});
+                    .setFooter({ text: "/w Skynowalker si y'a des bug"});
                 
                     message.reply({ embeds: [exampleEmbed] });
                 } catch(error){
@@ -83,6 +83,7 @@ client.on("messageCreate", async message => {
 
 // Approval part
 client.on('messageReactionAdd', async (reaction, user) => {
+
     if (reaction.message.channelId === "1203867919457722388" || reaction.message.channelId ==="1213935302381408288"){
         if (reaction.emoji.name === "✅" && user.id === '186483704325996544' || user.id === "1109761062447890452") {
             const key = reaction.message.content.trim().split(",")
@@ -97,6 +98,24 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 }
                 if(user_score){
                     const newScore ={ score: user_score.score + 1}
+                    await user_score.updateOne(newScore)
+                }
+        }
+        }  
+        
+        else if (reaction.emoji.name === "❎" && user.id === '186483704325996544' || user.id === "1109761062447890452") {
+            const key = reaction.message.content.trim().split(",")
+            for(let i = 0; i < key.length; i++){
+                const user_score = await Ladderboard.findOne({pseudo: key[i].toLowerCase().trim()})
+                if(!user_score){
+                    const newUser = new Ladderboard({
+                        pseudo: key[i].toLowerCase().trim(),
+                        score: 0.25
+                    })
+                    await newUser.save() 
+                }
+                if(user_score){
+                    const newScore ={ score: user_score.score + 0.25}
                     await user_score.updateOne(newScore)
                 }
         }
