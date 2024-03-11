@@ -1,3 +1,4 @@
+const { setTimeout } =  require("timers/promises");
 require('dotenv').config();
 const express = require("express");
 const formidable = require("express-formidable");
@@ -7,7 +8,6 @@ const app = express();
 const { Client, EmbedBuilder } =  require("discord.js");
 const PREFIX = "!!"; // Prefix d'une commande
 const Ladderboard = require("./Ladder");
-const { skip } = require('node:test');
 
 app.use(formidable());
 app.use(cors());
@@ -38,7 +38,7 @@ client.on("ready",() => {
 
 // Command Part 
 client.on("messageCreate", async message => {
-    if(message.channelId === '1203867919457722388'){
+    if(message.channelId === "1203867919457722388" || message.channelId === "1216400187078213692"){
         if(message.member.id === "186483704325996544" || message.member.id === "1109761062447890452" && message.content.startsWith(PREFIX)){
             const input = message.content.slice(PREFIX.length).trim().toLowerCase()
             if(input === "reset"){
@@ -87,8 +87,8 @@ client.on("messageCreate", async message => {
 })
 
 // Approval part
-client.on('messageReactionAdd',  (reaction, user) => {
-    if ((reaction.message.channelId === "1203867919457722388") && (user.id === '186483704325996544' || user.id === "1109761062447890452") && (reaction.emoji.name === "✅" || reaction.emoji.name === "❎")){
+client.on('messageReactionAdd', async (reaction, user) => {
+    if ((reaction.message.channelId === "1203867919457722388" || reaction.message.channelId === "1216400187078213692") && (user.id === '186483704325996544' || user.id === "1109761062447890452") && (reaction.emoji.name === "✅" || reaction.emoji.name === "❎")){
         
         // How much point
         let point = 0
@@ -102,22 +102,34 @@ client.on('messageReactionAdd',  (reaction, user) => {
         const key = reaction.message.content.split(" ")
         for(let i = 0; i < key.length; i++){
             if(key[i]){
-                let thanos = client.users.fetch(key[i].slice(2,-1))
-                thanos.then(async function(pseudo) {
-                    const user_score = await Ladderboard.findOne({discord_id: key[i]})
-                    if(!user_score){
-                        const newUser = new Ladderboard({
-                            discord_id: key[i],
-                            pseudo: pseudo.username,
-                            score: point
-                        })
-                        await newUser.save() 
+                const user_score = await Ladderboard.findOne({discord_id: key[i]})
+                if(!user_score){
+                    let thanos = client.users.fetch(key[i].slice(2,-1))
+                    thanos.then(async function(pseudo) {
+                    let end_pseudo = ""
+                    if(pseudo.globalName){
+                        end_pseudo = pseudo.globalName
                     }
-                    if(user_score){
-                        const newScore ={ score: user_score.score + point}
-                        await user_score.updateOne(newScore)
+                    else
+                    {
+                        end_pseudo= key[i]
                     }
-                })
+                    console.log(pseudo)
+                    console.log("New pseudo ->" + end_pseudo + "            Discord ID =>" + key[i])
+                    if(pseudo.globalName){}
+                    const newUser = new Ladderboard({
+                        discord_id: key[i],
+                        pseudo: end_pseudo,
+                        score: point
+                    })
+                    await newUser.save() 
+                })}
+                if(user_score){
+                    const newScore ={ score: user_score.score + point}
+                    await user_score.updateOne(newScore)
+                }
+            
+                await setTimeout(100)
             }
         }
     }
@@ -128,3 +140,4 @@ client.login(process.env.DISCORD_KEY);
 const server = app.listen(process.env.PORT || 4000, () => {
     console.log("Server Started 🚀");
   });
+  782264562799476776
