@@ -106,6 +106,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 if(!user_score){
                     let thanos = client.users.fetch(key[i].slice(2,-1))
                     thanos.then(async function(pseudo) {
+
                     let end_pseudo = ""
                     if(pseudo.globalName){
                         end_pseudo = pseudo.globalName
@@ -114,9 +115,9 @@ client.on('messageReactionAdd', async (reaction, user) => {
                     {
                         end_pseudo= key[i]
                     }
-                    console.log(pseudo)
-                    console.log("New pseudo ->" + end_pseudo + "            Discord ID =>" + key[i])
-                    if(pseudo.globalName){}
+
+                    console.log("New Database Pseudo =>" + end_pseudo + "  ///  Discord ID =>" + key[i] + "   ///  username  =>" + pseudo.username)
+
                     const newUser = new Ladderboard({
                         discord_id: key[i],
                         pseudo: end_pseudo,
